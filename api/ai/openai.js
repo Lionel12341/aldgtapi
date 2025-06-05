@@ -1,27 +1,22 @@
 const fetch = require('node-fetch');
 
 module.exports = function(app) {
-  const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || "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";
+  const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "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";
 
   async function OpenAi(teks) {
     try {
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${DEEPSEEK_API_KEY}`,
+          "Authorization": `Bearer ${OPENAI_API_KEY}`,
           "Content-Type": "application/json"
-          // Optional headers:
-          // "HTTP-Referer": "",
-          // "X-Title": ""
         },
         body: JSON.stringify({
-          model: "meta-llama/llama-4-maverick:free",
+          model: "gpt-3.5-turbo", // model paling murah
           messages: [
             {
               role: "user",
-              content: [
-              { type: "text", text: teks }
-              ]
+              content: teks
             }
           ]
         })
@@ -30,13 +25,13 @@ module.exports = function(app) {
       const data = await response.json();
 
       if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-        throw new Error("Invalid response from Deepseek API");
+        throw new Error("Invalid response from OpenAI API");
       }
 
       return data.choices[0].message.content.trim();
 
     } catch (err) {
-      throw new Error("Failed to fetch from Deepseek API: " + err.message);
+      throw new Error("Failed to fetch from OpenAI API: " + err.message);
     }
   }
 
