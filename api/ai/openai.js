@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 
 module.exports = function(app) {
-  const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "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";
+  const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "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";
 
   async function OpenAi(teks) {
     try {
