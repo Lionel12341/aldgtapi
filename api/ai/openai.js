@@ -1,41 +1,34 @@
 const fetch = require('node-fetch');
 
 module.exports = function(app) {
-  const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "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";
-
-  async function OpenAi(teks) {
+  // Fungsi utama untuk memanggil API GPT3 dari siputzx.my.id
+  async function PublicGPT3(teks) {
     try {
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
+      const prompt = encodeURIComponent("kamu adalah ai yang ceria");
+      const content = encodeURIComponent(teks);
+      const url = `https://api.siputzx.my.id/api/ai/gpt3?prompt=${prompt}&content=${content}`;
+
+      const response = await fetch(url, {
+        method: "GET",
         headers: {
-          "Authorization": `Bearer ${OPENAI_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "gpt-3.5-turbo", // model paling murah
-          messages: [
-            {
-              role: "user",
-              content: teks
-            }
-          ]
-        })
+          "accept": "*/*"
+        }
       });
 
-      const data = await response.json();
+      const result = await response.text();
 
-      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-        throw new Error("Invalid response from OpenAI API");
+      if (!result) {
+        throw new Error("Empty response from GPT3 API");
       }
 
-      return data.choices[0].message.content.trim();
-
+      return result.trim();
     } catch (err) {
-      throw new Error("Failed to fetch from OpenAI API: " + err.message);
+      throw new Error("Failed to fetch from GPT3 API: " + err.message);
     }
   }
 
-  app.get('/ai/openai', async (req, res) => {
+  // Endpoint /ai/gpt3
+  app.get('/ai/gpt3', async (req, res) => {
     const { text, apikey } = req.query;
 
     if (!text) {
@@ -47,7 +40,7 @@ module.exports = function(app) {
     }
 
     try {
-      const result = await OpenAi(text);
+      const result = await PublicGPT3(text);
       res.status(200).json({
         status: true,
         result
