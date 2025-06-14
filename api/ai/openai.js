@@ -1,52 +1,39 @@
-const fetch = require('node-fetch');
+const axios = require('axios');
 
-module.exports = function(app) {
-  // Fungsi utama untuk memanggil API GPT3 dari siputzx.my.id
-  async function PublicGPT3(teks) {
-    try {
-      const prompt = encodeURIComponent("kamu adalah ai yang ceria");
-      const content = encodeURIComponent(teks);
-      const url = `https://api.siputzx.my.id/api/ai/gpt3?prompt=${prompt}&content=${content}`;
-
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "accept": "*/*"
-        }
-      });
-
-      const result = await response.text();
-
-      if (!result) {
-        throw new Error("Empty response from GPT3 API");
-      }
-
-      return result.trim();
-    } catch (err) {
-      throw new Error("Failed to fetch from GPT3 API: " + err.message);
-    }
-  }
-
-  // Endpoint /ai/gpt3
-  app.get('/ai/gpt3', async (req, res) => {
-    const { text, apikey } = req.query;
+module.exports = function (app) {
+  app.get('/ai/chatgpt', async (req, res) => {
+    const { text } = req.query;
 
     if (!text) {
-      return res.json({ status: false, error: 'Text is required' });
-    }
-
-    if (!apikey || !global.apikey.includes(apikey)) {
-      return res.json({ status: false, error: 'Invalid or missing API key' });
+      return res.status(400).json({
+        status: false,
+        message: 'Parameter "text" wajib diisi. Contoh: /ai/chatgpt?text=Halo, siapa kamu?'
+      });
     }
 
     try {
-      const result = await PublicGPT3(text);
-      res.status(200).json({
-        status: true,
-        result
+      const apiUrl = `https://api.nekorinn.my.id/ai/gpt-4.1?text=${encodeURIComponent(text)}`;
+      const response = await axios.get(apiUrl);
+
+      // Respon berupa text langsung dari server
+      if (typeof response.data === 'string') {
+        return res.status(200).json({
+          status: true,
+          result: response.data.trim()
+        });
+      }
+
+      // Kalau respons tidak sesuai ekspektasi
+      res.status(500).json({
+        status: false,
+        message: 'Respon dari API tidak valid atau kosong'
       });
-    } catch (error) {
-      res.status(500).json({ status: false, error: error.message });
+    } catch (err) {
+      res.status(500).json({
+        status: false,
+        message: 'Gagal mengambil jawaban dari API eksternal',
+        error: err.message
+      });
     }
   });
 };
