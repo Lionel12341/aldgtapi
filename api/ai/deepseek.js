@@ -1,43 +1,6 @@
 const fetch = require('node-fetch');
 
 module.exports = function(app) {
-  const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || "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";
-
-  async function Deepsek(teks) {
-    try {
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${DEEPSEEK_API_KEY}`,
-          "Content-Type": "application/json"
-          // Optional headers:
-          // "HTTP-Referer": "",
-          // "X-Title": ""
-        },
-        body: JSON.stringify({
-          model: "deepseek/deepseek-r1:free",
-          messages: [
-            {
-              role: "user",
-              content: teks
-            }
-          ]
-        })
-      });
-
-      const data = await response.json();
-
-      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-        throw new Error("Invalid response from Deepseek API");
-      }
-
-      return data.choices[0].message.content.trim();
-
-    } catch (err) {
-      throw new Error("Failed to fetch from Deepseek API: " + err.message);
-    }
-  }
-
   app.get('/ai/deepseek', async (req, res) => {
     const { text, apikey } = req.query;
 
@@ -50,10 +13,26 @@ module.exports = function(app) {
     }
 
     try {
-      const result = await Deepsek(text);
+      const encodedPrompt = encodeURIComponent("You are an assistant that always responds in Indonesian with a friendly and informal tone");
+      const encodedText = encodeURIComponent(text);
+      const url = `https://api.siputzx.my.id/api/ai/deepseek?prompt=${encodedPrompt}&message=${encodedText}`;
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "accept": "*/*"
+        }
+      });
+
+      const data = await response.text();
+
+      if (!data) {
+        throw new Error("No response from DeepSeek public API");
+      }
+
       res.status(200).json({
         status: true,
-        result
+        result: data.trim()
       });
     } catch (error) {
       res.status(500).json({ status: false, error: error.message });
